@@ -6,6 +6,10 @@ use App\Http\Controllers\AsignaturaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Middleware\EnsureIDIsValid;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+use App\Models\User;
 
 Route::get('/', function () {
     return view('welcome');
@@ -46,6 +50,46 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'userProfile']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });
+
+//Rutas Passport
+
+use Illuminate\Support\Facades\Auth;
+use Laravel\Passport\Http\Controllers\AccessTokenController;
+
+
+Route::post('/login', function (Request $request) {
+    $credentials = $request->only(['email', 'password']);
+
+    // Permitir login por email o nombre
+    $user = User::where('email', $credentials['email'])
+                ->orWhere('name', $credentials['email'])
+                ->first();
+
+    if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        return response()->json(['message' => 'Credenciales inválidas'], 401);
+    }
+
+    $token = $user->createToken('API Token')->accessToken;
+
+    return response()->json(['token' => $token], 200);
+});
+Route::middleware('auth:api')->get('/user', function (Request $request) {
+    return response()->json($request->user());
+});
+Route::middleware('auth:api')->post('/logout', function (Request $request) {
+    $request->user()->tokens()->delete();
+    
+    return response()->json(['message' => 'Sesión cerrada correctamente'], 200);
+});
+Route::middleware('auth:api')->post('/logout', function (Request $request) {
+    $request->user()->tokens()->delete();
+    
+    return response()->json(['message' => 'Sesión cerrada correctamente'], 200);
+});
+Route::post('/oauth/token', [AccessTokenController::class, 'issueToken'])
+    ->middleware(['throttle']);
+
+
 
 
 

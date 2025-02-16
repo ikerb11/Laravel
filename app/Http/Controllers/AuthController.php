@@ -20,7 +20,7 @@ class AuthController extends Controller
             }
             // Crear un token solo si el usuario existe
             if ($user) {
-                $token = $user->createToken('auth_token')->plainTextToken;
+                $token = $user->createToken('auth_token')->accessToken;
                 return response()->json(['token' => $token, 'user' => $user], 200);
             }
         }
