@@ -10,8 +10,12 @@ class CheckAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::check()) {
-            return response()->json(['message' => 'Acceso denegado. No autenticado'], 403);
+        // Verificar si el usuario está autenticado usando Passport
+        if (!Auth::guard('api')->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Acceso denegado. Token no válido o ausente'
+            ], 401);
         }
 
         return $next($request);
